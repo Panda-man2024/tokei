@@ -550,18 +550,20 @@
         lastAngle = currentAngle;
 
         if (activeHand === hourHand) {
-            // 短針: 30度 = 1時間 = 60分 → リニアに動かす
-            // 1度 = 2分 なので angleDiff * 2 分だけ totalMinutes を変化させる
-            dragAccumulator += angleDiff * 2;
-            const minutesMoved = Math.round(dragAccumulator);
-            if (minutesMoved !== 0) {
-                totalMinutes += minutesMoved;
-                dragAccumulator -= minutesMoved;
+            // 短針のみ: 分は変えず「時」だけ変化
+            // 30度 = 1時間。dragAccumulatorが30度たまるごとに1時間進む
+            dragAccumulator += angleDiff;
+            const hoursMoved = Math.trunc(dragAccumulator / 30);
+            if (hoursMoved !== 0) {
+                const currentM = totalMinutes % 60;
+                let newH = Math.floor(totalMinutes / 60) + hoursMoved;
+                newH = ((newH % 24) + 24) % 24;
+                totalMinutes = newH * 60 + currentM;
+                dragAccumulator -= hoursMoved * 30;
                 updateDisplay();
             }
         } else {
-            // 分針: 6度 = 1分
-            // 1分刻みでスナップ。連動モードなので、分が60を超えたら時も繰り上がる(totalMinutesで自動処理)
+            // 分針: 6度 = 1分。連動モードなので時も繰り上がる
             dragAccumulator += angleDiff;
             const minutesMoved = Math.round(dragAccumulator / 6);
             if (minutesMoved !== 0) {
